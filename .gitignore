@@ -1,0 +1,76 @@
+# =============================================================================
+# Patient Management System — root .gitignore
+# =============================================================================
+
+# --- Secrets & local env (keep *.example tracked) ---
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+share/python-wheels/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Test / coverage / type checkers ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+coverage.xml
+*.cover
+
+# --- Local databases & runtime data ---
+*.db
+*.sqlite
+*.sqlite3
+*.log
+logs/
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# --- Editors / IDEs ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# --- Docker / local volumes (if ever mounted as bind dirs) ---
+pgdata/
+postgres_data/
+
+# --- Temporary recovery / scratch ---
+_recovered_app_from_transcript/
+
+# --- Deprecated React frontend build artifacts (if present) ---
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
