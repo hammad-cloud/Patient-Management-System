@@ -1,0 +1,8 @@
+Alembic migrations for the Patient Management System.
+
+Commands (run from backend/ with venv active):
+
+  alembic revision --autogenerate -m "describe change"
+  alembic upgrade head
+  alembic downgrade -1
+  alembic current
