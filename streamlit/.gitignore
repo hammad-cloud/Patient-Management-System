@@ -1,0 +1,34 @@
+# Streamlit frontend
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Tests / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Streamlit / runtime
+.streamlit/secrets.toml
+*.log
+logs/
+
+# Editors
+.idea/
+.vscode/

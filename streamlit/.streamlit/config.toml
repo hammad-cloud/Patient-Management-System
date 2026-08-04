@@ -1,0 +1,17 @@
+[theme]
+primaryColor = "#0F766E"
+backgroundColor = "#F4F8F7"
+secondaryBackgroundColor = "#EEF5F3"
+textColor = "#102A33"
+font = "sans serif"
+
+[server]
+headless = true
+port = 8501
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# Hide Deploy / developer toolbar so sidebar content can sit at the top
+toolbarMode = "minimal"
