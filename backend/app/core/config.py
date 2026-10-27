@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     app_name: str = "Patient Management System"
     # Default targets local PostgreSQL. Tests override with in-memory SQLite.
     database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/hospital_db"
+    # Optional read replica for list queries; falls back to database_url.
+    database_read_url: str | None = None
+    # Optional Redis for the shared cache and job queue; caching is off without it.
+    redis_url: str | None = None
 
     secret_key: str = "change-this-to-a-long-random-secret-key"
     algorithm: str = "HS256"

@@ -13,6 +13,7 @@ from app.core.security import decode_access_token
 from app.crud import token_blacklist as token_blacklist_crud
 from app.crud import user as user_crud
 from app.db.session import get_db as _get_db
+from app.db.session import get_read_db as _get_read_db
 from app.models.user import User, UserRole
 
 bearer_scheme = HTTPBearer(auto_error=True)
@@ -21,6 +22,11 @@ bearer_scheme = HTTPBearer(auto_error=True)
 def get_db() -> Generator[Session, None, None]:
     """FastAPI dependency that provides a database session per request."""
     yield from _get_db()
+
+
+def get_read_db() -> Generator[Session, None, None]:
+    """FastAPI dependency that provides a read-replica session per request."""
+    yield from _get_read_db()
 
 
 def get_current_token_payload(

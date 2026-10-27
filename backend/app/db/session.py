@@ -19,6 +19,12 @@ engine = create_engine(
     pool_pre_ping=True,
 )
 
+read_engine = (
+    create_engine(settings.database_read_url, pool_pre_ping=True)
+    if settings.database_read_url
+    else engine
+)
+
 
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(dbapi_connection, _connection_record) -> None:  # type: ignore[no-untyped-def]
@@ -38,9 +44,26 @@ SessionLocal = sessionmaker(
 )
 
 
+ReadSessionLocal = sessionmaker(
+    bind=read_engine,
+    autocommit=False,
+    autoflush=False,
+    class_=Session,
+)
+
+
 def get_db() -> Generator[Session, None, None]:
     """Yield a database session and close it after the request."""
     db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def get_read_db() -> Generator[Session, None, None]:
+    """Yield a read-replica session (primary when no replica is configured)."""
+    db = ReadSessionLocal()
     try:
         yield db
     finally:
