@@ -1,0 +1,93 @@
+# Scaling stack: nginx load balancer -> 2 API instances, Redis cache + job queue,
+# RQ worker, PostgreSQL primary + streaming read replica.
+# Run: docker compose -f docker-compose.scale.yml up -d --build
+x-db-env: &db-env
+  DATABASE_URL: postgresql+psycopg2://postgres:postgres@db-primary:5432/hospital_db
+  DATABASE_READ_URL: postgresql+psycopg2://postgres:postgres@db-replica:5432/hospital_db
+  REDIS_URL: redis://redis:6379/0
+
+x-api: &api
+  image: pms-backend:local
+  build: ./backend
+  environment: *db-env
+  restart: unless-stopped
+  depends_on:
+    migrate: { condition: service_completed_successfully }
+    db-replica: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  healthcheck:
+    test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+    interval: 5s
+    timeout: 5s
+    retries: 10
+
+services:
+  db-primary:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hospital_db
+    command: postgres -c wal_level=replica -c max_wal_senders=5 -c hot_standby=on
+    volumes:
+      - ./deploy/primary-init.sh:/docker-entrypoint-initdb.d/primary-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hospital_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  db-replica:
+    image: postgres:16-alpine
+    user: postgres
+    environment:
+      PGPASSWORD: postgres
+    entrypoint: ["sh", "/replica-entrypoint.sh"]
+    volumes:
+      - ./deploy/replica-entrypoint.sh:/replica-entrypoint.sh:ro
+    depends_on:
+      db-primary: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hospital_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Runs migrations and seeds the admin once, so the API instances don't race.
+  migrate:
+    image: pms-backend:local
+    build: ./backend
+    environment: *db-env
+    command: sh -c "alembic upgrade head && python -c 'from app.db.session import init_db; init_db()'"
+    depends_on:
+      db-primary: { condition: service_healthy }
+
+  api1: *api
+  api2: *api
+
+  worker:
+    image: pms-backend:local
+    environment: *db-env
+    command: rq worker --url redis://redis:6379/0
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      api1: { condition: service_healthy }
+      api2: { condition: service_healthy }
