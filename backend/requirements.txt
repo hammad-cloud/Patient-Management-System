@@ -11,3 +11,5 @@ bcrypt
 PyJWT
 pytest
 httpx
+redis
+rq
